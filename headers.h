@@ -4,31 +4,37 @@
 // oled - 128x64
 #include "U8glib.h"
 U8GLIB_SSD1306_128X64 u8g(U8G_I2C_OPT_NO_ACK); 
-typedef void TipoFuncao(uint8_t turnOffTheLights);
+
+typedef void TipoFuncao(void);
 TipoFuncao *ptrF;
 
 // strings
 #include "strings.h"
 
 // led pins
-#define GREEN_LED   0 
-#define RED_LED     1
+#define PUSH_BUTTON 7
+#define RTC_01      8
+#define RTC_02      9
+#define RTC_03      10
+#define DELAY       10
 
 // rtc
 #include <DS1302.h>
-DS1302 rtc(8, 9, 10);
+DS1302 rtc(RTC_01, RTC_02, RTC_03);
 
 // globals
 bool isBooting = true;
-bool isOledOFF = false;
+bool turnOffTheLights = false;
+bool isBacklightOn = false;
 uint8_t currentBootStage = 0;
-int currentDelay = 1500;
+uint8_t counterClock = 0;
 char currentHour[6];
 char currentDate[6];
 char currentYear[6];
 char * currentDayOfWeek;
+char * currentSentence;
 
 // display functions
-void writeToDisplay(uint8_t turnOffTheLights);
+void writeToDisplay();
 
 #endif

@@ -1,13 +1,8 @@
 #include "headers.h"
 
-uint8_t turnOffTheLights = 0;
-
 void setup() {
-  // Leds
-  pinMode(RED_LED, OUTPUT); // vermelho
-  pinMode(GREEN_LED, OUTPUT); // verde
   pinMode(LED_BUILTIN, OUTPUT); // internal
-  digitalWrite(RED_LED, HIGH);
+  pinMode(PUSH_BUTTON, INPUT_PULLUP);
 
   // oled
   if ( u8g.getMode() == U8G_MODE_R3G3B2 ) {
@@ -24,58 +19,40 @@ void setup() {
   }
   ptrF = drawBoot00;
 
-  // NAO APAGAR CODIGO PRA DEFINIR A HORA
+  // CODIGO PRA INICIAR A DATA/HORA NO RTC
   // rtc
   // rtc.writeProtect(false);
   // rtc.halt(false);
-  // Time t(2023, 1, 16, 18, 25, 0, Time::kMonday);
+  // Time t(2023, 2, 5, 19, 18, 0, Time::kSunday);
   // rtc.time(t);
 }
 
 void loop() {
-  if (isBooting) {
-    writeToDisplay(turnOffTheLights);
-    delay(currentDelay);
-  } else {
-    turnOffTheLights += 1;
-    if (turnOffTheLights % 5 == 0) writeToDisplay(turnOffTheLights);
+  counterClock += 1;
 
-    if (turnOffTheLights % 2 == 0) {
-      digitalWrite(GREEN_LED, HIGH);
-      digitalWrite(RED_LED, LOW);
+  uint8_t i = 0;
+  for (i = 0; i < 101; i++) {
+    if (digitalRead(PUSH_BUTTON) == LOW) {
+      if (isBacklightOn) {
+        u8g.sleepOn();
+      } else {
+        u8g.sleepOff();
+      }
+      isBacklightOn = !isBacklightOn;
+      while (digitalRead(PUSH_BUTTON) == LOW);
+    }  
+    delay(DELAY);
+  }
+
+  if (isBooting) {
+    writeToDisplay();
+  } else {
+    turnOffTheLights = !turnOffTheLights;
+    if (turnOffTheLights) {
       digitalWrite(LED_BUILTIN, LOW);
     } else {
-      digitalWrite(GREEN_LED, LOW);
-      digitalWrite(RED_LED, HIGH);
       digitalWrite(LED_BUILTIN, HIGH);
     }
-    
-    switch (turnOffTheLights) {
-      case 1:
-        writeToDisplay(turnOffTheLights);
-        break;
-      // case 130:
-      //   u8g.sleepOn();
-      //   turnOffTheLights = 0;
-      //   isOledOFF = true;
-      //   break;
-    }
-
-    uint8_t i;
-    for(i = 0; i < 10; i += 1) {
-      // if (digitalRead(PUSH_BUTTON) == LOW) {
-      //   if(isOledOFF) {
-      //     digitalWrite(RED_LED, HIGH);
-      //     u8g.sleepOff();
-      //     turnOffTheLights = 0;
-      //   } else {
-      //     u8g.sleepOn();
-      //   }
-      //   turnOffTheLights = 0;
-      //   isOledOFF = !isOledOFF;
-      // }
-
-      delay(currentDelay);
-    }
+    writeToDisplay();
   }
 }

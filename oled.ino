@@ -1,10 +1,5 @@
 #include "headers.h"
 
-uint8_t panelPos = 18;
-uint8_t linePos = 0;
-uint8_t textPos = 0;
-uint8_t textVPos = 5;
-
 void formatNumber(uint8_t number, char* firstByte, char* secondByte) {
   char zeros_pos[6] = "0o0*0o";
   char zeros_antes[6] = ". __. ";
@@ -74,6 +69,33 @@ void updateHour() {
       break;
   }
 
+  // sentence
+  switch (t.day) {
+    case Time::kSunday:
+    case Time::kSaturday:
+      currentSentence = STR_STCE_02;
+      break;
+    case Time::kMonday:
+    case Time::kTuesday:
+    case Time::kWednesday:
+    case Time::kThursday:
+    case Time::kFriday:
+      if ((t.hr >= 8 && t.hr < 12) || (t.hr >= 14 && t.hr < 18)) {
+        currentSentence = STR_STCE_03;
+      } else {
+        if (t.day == Time::kFriday) {
+          currentSentence = STR_STCE_05;
+        } else {
+          currentSentence = STR_STCE_02;
+        }
+      }
+      break;
+  }  
+  if (t.hr >= 7 && t.hr < 8) currentSentence = STR_STCE_04;
+  if (t.hr >= 12 && t.hr < 14) currentSentence = STR_STCE_04;
+  if (t.hr >= 18 && t.hr < 20) currentSentence = STR_STCE_04;
+  if (t.min % 5 == 0) currentSentence = STR_STCE_01;
+
   // hour
   formatNumber(t.hr, &firstByte, &secondByte);
   currentHour[0] = firstByte;
@@ -105,129 +127,128 @@ void updateHour() {
 }
 
 void configureDisplay() {
-  if (isBooting) return;
-  uint8_t display = random(12);
+  uint8_t display = random(25);
   switch (display) {
     case 0:
-      panelPos = 18;
-      linePos = 0;
-      ptrF = drawBootHour02;
-      break;
     case 1:
-      panelPos = 18;
-      linePos = 0;
-      ptrF = drawBootDate02;
+      ptrF = drawBootHour00;
       break;
     case 2:
-      ptrF = drawBootDate01;
-      break;
     case 3:
       ptrF = drawBootHour01;
       break;
     case 4:
-      panelPos = 18;
-      linePos = 0;
-      ptrF = drawBootHour00;
-      break;
     case 5:
-      panelPos = 0;
-      linePos = 49;
       ptrF = drawBootHour02;
       break;
     case 6:
-      panelPos = 18;
-      linePos = 0;
-      ptrF = drawBootDate00;
-      break;
     case 7:
       ptrF = drawBootHour03;
       break;
     case 8:
-      panelPos = 0;
-      linePos = 49;
-      ptrF = drawBootDate02;
-      break;
-    case 9:
-      panelPos = 0;
-      linePos = 49;
-      ptrF = drawBootHour00;
-      break;
-    case 10:
-      ptrF = drawBootDate03;
-      break;
-    case 11:
-      panelPos = 0;
-      linePos = 49;
       ptrF = drawBootDate00;
       break;
+    case 9:
+      ptrF = drawBootDate01;
+      break;
+    case 10:
+      ptrF = drawBootDate02;
+      break;
+    case 11:
+      ptrF = drawBootDate03;
+      break;
+    case 12:
+    case 13:
+      ptrF = drawBootHour04;
+      break;
+    case 14:
+    case 15:
+      ptrF = drawBootHour05;
+      break;
+    case 16:
+    case 17:
+      ptrF = drawBootHour06;
+      break;
+    case 18:
+    case 19:
+      ptrF = drawBootHour07;
+      break;
+    case 20:
+      ptrF = drawBootDate04;
+      break;
+    case 21:
+      ptrF = drawBootDate05;
+      break;
+    case 22:
+      ptrF = drawBootDate06;
+      break;
+    case 23:
+      ptrF = drawBootDate07;
+      break;
+    case 24:
+      ptrF = drawBoot02;
+      break;
   }
-  textPos = panelPos + 38;
-  textVPos = random(5, 16);
 }
 
-void writeToDisplay(uint8_t turnOffTheLights) {
-  configureDisplay();
-  updateHour();
+void writeToDisplay() {
+  if (counterClock >= 3) {
+    counterClock = 0;
+  } else {
+    return;
+  }
 
   u8g.firstPage();
   do {
-    (*ptrF)(turnOffTheLights);
+    (*ptrF)();
   } while( u8g.nextPage() );
 
   if (isBooting) {
-    if (currentBootStage < 4) {
+    if (currentBootStage < 3) {
       currentBootStage += 1;
       if (currentBootStage == 1) ptrF = drawBoot01;
       if (currentBootStage == 2) ptrF = drawBoot02;
-      if (currentBootStage == 3) {
-        ptrF = drawBootHour00;
-        currentDelay = 5000;
-      }
     } else {
-      digitalWrite(GREEN_LED, HIGH);
-
-      currentDelay = 100;
       isBooting = false;
+      configureDisplay();
+      updateHour();
+      ptrF = drawBootHour00;
     }
+  } else {
+    configureDisplay();
+    updateHour();
   }
 }
 
-void drawLines(uint8_t turnOffTheLights, uint8_t pos) {
-  uint8_t i;
-  for(i = 0; i < (129 - turnOffTheLights); i = i + 3) {
-    uint8_t linha = random(15);
-    u8g.drawVLine(i,   pos, linha);
-    u8g.drawVLine(i+1, pos, linha);
-  }
-}
-
-void drawBoot00(uint8_t turnOffTheLights) {
+void drawBoot00() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 15, STR_VERSION);
   u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
   u8g.drawStr( 10, 57, STR_SICK);
 }
 
-void drawBoot01(uint8_t turnOffTheLights) {
+void drawBoot01() {
   u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
   u8g.drawStr( 10, 57, STR_CLOCKS);
 }
 
-void drawBoot02(uint8_t turnOffTheLights) {
+void drawBoot02() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(1, 15, STR_LOGO01);
   u8g.drawStr(1, 30, STR_LOGO02);
   u8g.drawStr(1, 45, STR_LOGO03);
 }
 
-void drawBootHour00(uint8_t turnOffTheLights) {
+void drawBootHour00() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 15, currentSentence);
   u8g.setFont(u8g_font_fub30);
-  drawLines(turnOffTheLights, linePos);
-  u8g.drawRFrame(0, panelPos, 128, 46, 4);
-  u8g.drawStr(textVPos, textPos, currentHour);
+  u8g.drawStr(12, 57, currentHour);
 }
 
-void drawBootHour01(uint8_t turnOffTheLights) {
+void drawBootHour01() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 15, currentDayOfWeek);
   u8g.drawRFrame(0,18, 128, 46, 4);
@@ -235,44 +256,107 @@ void drawBootHour01(uint8_t turnOffTheLights) {
   u8g.drawStr(12, 57, currentHour);
 }
 
-void drawBootHour02(uint8_t turnOffTheLights) {
+void drawBootHour02() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 15, currentSentence);
+  u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
-  drawLines(turnOffTheLights, linePos);
-  u8g.drawStr(textVPos, textPos, currentHour);
+  u8g.drawStr(12, 57, currentHour);
 }
 
-void drawBootHour03(uint8_t turnOffTheLights) {
+void drawBootHour03() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 15, currentYear);
   u8g.setFont(u8g_font_fub30);
   u8g.drawStr(12, 57, currentHour);
 }
 
-void drawBootDate00(uint8_t turnOffTheLights) {
+void drawBootHour04() {
   u8g.setFont(u8g_font_fub30);
-  drawLines(turnOffTheLights, linePos);
-  u8g.drawRFrame(0, panelPos, 128, 46, 4);
-  u8g.drawStr(textVPos, textPos, currentDate);
+  u8g.drawStr(5, 42, currentHour);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentSentence);
 }
 
-void drawBootDate01(uint8_t turnOffTheLights) {
+void drawBootHour05() {
+  u8g.drawRFrame(0,2, 128, 46, 4);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentHour);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentDayOfWeek);
+}
+
+void drawBootHour06() {
+  u8g.drawRFrame(0,2, 128, 46, 4);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentHour);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentSentence);
+}
+
+void drawBootHour07() {
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentHour);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentYear);
+}
+
+void drawBootDate00() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 15, currentDayOfWeek);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(12, 57, currentDate);
+}
+
+void drawBootDate01() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 15, currentSentence);
   u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
   u8g.drawStr(12, 57, currentDate);
 }
 
-void drawBootDate02(uint8_t turnOffTheLights) {
-  u8g.setFont(u8g_font_fub30);
-  drawLines(turnOffTheLights, linePos);
-  u8g.drawStr(textVPos, textPos, currentDate);
-}
-
-void drawBootDate03(uint8_t turnOffTheLights) {
+void drawBootDate02() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 15, currentYear);
+  u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
   u8g.drawStr(12, 57, currentDate);
 }
 
+void drawBootDate03() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 15, currentSentence);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(12, 57, currentDate);
+}
+
+void drawBootDate04() {
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentDate);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentSentence);
+}
+
+void drawBootDate05() {
+  u8g.drawRFrame(0,2, 128, 46, 4);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentDate);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentDayOfWeek);
+}
+
+void drawBootDate06() {
+  u8g.drawRFrame(0,2, 128, 46, 4);
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentDate);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentSentence);
+}
+
+void drawBootDate07() {
+  u8g.setFont(u8g_font_fub30);
+  u8g.drawStr(5, 42, currentDate);
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(5, 60, currentYear);
+}
