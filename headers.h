@@ -12,11 +12,12 @@ TipoFuncao *ptrF;
 #include "strings.h"
 
 // led pins
-#define PUSH_BUTTON 7
+// #define PUSH_BUTTON 7
 #define RTC_01      8
 #define RTC_02      9
 #define RTC_03      10
 #define DELAY       10
+#define PINO_PIR    11
 
 // rtc
 #include <DS1302.h>
@@ -28,6 +29,7 @@ bool turnOffTheLights = false;
 bool isBacklightOn = false;
 uint8_t currentBootStage = 0;
 uint8_t counterClock = 0;
+uint8_t counterPIR = 0;
 char currentHour[6];
 char currentDate[6];
 char currentYear[6];

@@ -38,7 +38,7 @@ void formatNumber(uint8_t number, char* firstByte, char* secondByte) {
   }
 }
 
-void updateHour() {
+void updateMessages() {
   Time t = rtc.time();
   char firstByte;
   char secondByte;
@@ -192,12 +192,6 @@ void configureDisplay() {
 }
 
 void writeToDisplay() {
-  if (counterClock >= 3) {
-    counterClock = 0;
-  } else {
-    return;
-  }
-
   u8g.firstPage();
   do {
     (*ptrF)();
@@ -211,12 +205,12 @@ void writeToDisplay() {
     } else {
       isBooting = false;
       configureDisplay();
-      updateHour();
+      updateMessages();
       ptrF = drawBootHour00;
     }
   } else {
     configureDisplay();
-    updateHour();
+    updateMessages();
   }
 }
 
