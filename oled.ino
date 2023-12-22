@@ -1,44 +1,21 @@
 #include "headers.h"
 
 void formatNumber(uint8_t number, char* firstByte, char* secondByte) {
-  char zeros_pos[6] = "0o0*0o";
-  char zeros_antes[6] = ". __. ";
-  uint8_t pos = random(6);
   char aux[4];
+  sprintf(aux, "%u", number);
 
-  switch(number) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
-      *firstByte = zeros_antes[pos];
-      sprintf(aux, "%u", number);
-      *secondByte = aux[0];
-      break;
-    case 10:
-    case 20:
-    case 30:
-    case 40:
-    case 50:
-      *secondByte = zeros_pos[pos];
-      sprintf(aux, "%u", number);
-      *firstByte = aux[0];
-      break;
-    default:
-      sprintf(aux, "%u", number);
-      *firstByte  = aux[0];
-      *secondByte = aux[1];
-      break;
+  if(number > 9) {
+    *firstByte  = aux[0];
+    *secondByte = aux[1];
+  } else {
+    *firstByte  = '0';
+    *secondByte = aux[0];
   }
 }
 
 void updateMessages() {
+  if(adjustStep != NO_ADJUST) return;
+
   Time t = rtc.time();
   char firstByte;
   char secondByte;
@@ -127,67 +104,71 @@ void updateMessages() {
 }
 
 void configureDisplay() {
-  uint8_t display = random(25);
-  switch (display) {
-    case 0:
-    case 1:
-      ptrF = drawBootHour00;
-      break;
-    case 2:
-    case 3:
-      ptrF = drawBootHour01;
-      break;
-    case 4:
-    case 5:
-      ptrF = drawBootHour02;
-      break;
-    case 6:
-    case 7:
-      ptrF = drawBootHour03;
-      break;
-    case 8:
-      ptrF = drawBootDate00;
-      break;
-    case 9:
-      ptrF = drawBootDate01;
-      break;
-    case 10:
-      ptrF = drawBootDate02;
-      break;
-    case 11:
-      ptrF = drawBootDate03;
-      break;
-    case 12:
-    case 13:
-      ptrF = drawBootHour04;
-      break;
-    case 14:
-    case 15:
-      ptrF = drawBootHour05;
-      break;
-    case 16:
-    case 17:
-      ptrF = drawBootHour06;
-      break;
-    case 18:
-    case 19:
-      ptrF = drawBootHour07;
-      break;
-    case 20:
-      ptrF = drawBootDate04;
-      break;
-    case 21:
-      ptrF = drawBootDate05;
-      break;
-    case 22:
-      ptrF = drawBootDate06;
-      break;
-    case 23:
-      ptrF = drawBootDate07;
-      break;
-    case 24:
-      ptrF = drawBoot02;
-      break;
+  if(adjustStep != NO_ADJUST) {
+    ptrF = drawConfig;
+  } else {
+    uint8_t display = random(25);
+    switch (display) {
+      case 0:
+      case 1:
+        ptrF = drawBootHour00;
+        break;
+      case 2:
+      case 3:
+        ptrF = drawBootHour01;
+        break;
+      case 4:
+      case 5:
+        ptrF = drawBootHour02;
+        break;
+      case 6:
+      case 7:
+        ptrF = drawBootHour03;
+        break;
+      case 8:
+        ptrF = drawBootDate00;
+        break;
+      case 9:
+        ptrF = drawBootDate01;
+        break;
+      case 10:
+        ptrF = drawBootDate02;
+        break;
+      case 11:
+        ptrF = drawBootDate03;
+        break;
+      case 12:
+      case 13:
+        ptrF = drawBootHour04;
+        break;
+      case 14:
+      case 15:
+        ptrF = drawBootHour05;
+        break;
+      case 16:
+      case 17:
+        ptrF = drawBootHour06;
+        break;
+      case 18:
+      case 19:
+        ptrF = drawBootHour07;
+        break;
+      case 20:
+        ptrF = drawBootDate04;
+        break;
+      case 21:
+        ptrF = drawBootDate05;
+        break;
+      case 22:
+        ptrF = drawBootDate06;
+        break;
+      case 23:
+        ptrF = drawBootDate07;
+        break;
+      case 24:
+        ptrF = drawBoot02;
+        break;
+    }
   }
 }
 
@@ -206,7 +187,6 @@ void writeToDisplay() {
       isBooting = false;
       configureDisplay();
       updateMessages();
-      ptrF = drawBootHour00;
     }
   } else {
     configureDisplay();
@@ -233,6 +213,14 @@ void drawBoot02() {
   u8g.drawStr(1, 15, STR_LOGO01);
   u8g.drawStr(1, 30, STR_LOGO02);
   u8g.drawStr(1, 45, STR_LOGO03);
+}
+
+void drawConfig() {
+  u8g.setFont(u8g_font_8x13B);
+  u8g.drawStr(1, 15, adjustLine1);
+  u8g.drawStr(1, 30, adjustLine2);
+  u8g.drawStr(1, 45, adjustLine3);
+  u8g.drawStr(1, 60, STR_CONFIG);
 }
 
 void drawBootHour00() {
@@ -297,17 +285,17 @@ void drawBootHour07() {
 
 void drawBootDate00() {
   u8g.setFont(u8g_font_8x13B);
-  u8g.drawStr(5, 15, currentDayOfWeek);
+  u8g.drawStr(5, 15, currentDate);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(12, 57, currentDate);
+  u8g.drawStr(12, 57, currentHour);
 }
 
 void drawBootDate01() {
   u8g.setFont(u8g_font_8x13B);
-  u8g.drawStr(5, 15, currentSentence);
+  u8g.drawStr(5, 15, currentDate);
   u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(12, 57, currentDate);
+  u8g.drawStr(12, 57, currentHour);
 }
 
 void drawBootDate02() {
@@ -315,42 +303,42 @@ void drawBootDate02() {
   u8g.drawStr(5, 15, currentYear);
   u8g.drawRFrame(0,18, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(12, 57, currentDate);
+  u8g.drawStr(12, 57, currentHour);
 }
 
 void drawBootDate03() {
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 15, currentSentence);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(12, 57, currentDate);
+  u8g.drawStr(12, 57, currentHour);
 }
 
 void drawBootDate04() {
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(5, 42, currentDate);
+  u8g.drawStr(5, 42, currentHour);
   u8g.setFont(u8g_font_8x13B);
-  u8g.drawStr(5, 60, currentSentence);
+  u8g.drawStr(5, 60, currentDate);
 }
 
 void drawBootDate05() {
   u8g.drawRFrame(0,2, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(5, 42, currentDate);
+  u8g.drawStr(5, 42, currentHour);
   u8g.setFont(u8g_font_8x13B);
-  u8g.drawStr(5, 60, currentDayOfWeek);
+  u8g.drawStr(5, 60, currentDate);
 }
 
 void drawBootDate06() {
   u8g.drawRFrame(0,2, 128, 46, 4);
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(5, 42, currentDate);
+  u8g.drawStr(5, 42, currentHour);
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 60, currentSentence);
 }
 
 void drawBootDate07() {
   u8g.setFont(u8g_font_fub30);
-  u8g.drawStr(5, 42, currentDate);
+  u8g.drawStr(5, 42, currentHour);
   u8g.setFont(u8g_font_8x13B);
   u8g.drawStr(5, 60, currentYear);
 }

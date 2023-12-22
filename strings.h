@@ -7,6 +7,7 @@ const char STR_CLOCKS[]    = "clOcK";
 const char STR_LOGO01[]    = "Now is time to";
 const char STR_LOGO02[]    = "check the fucking";
 const char STR_LOGO03[]    = "time every time";
+const char STR_CONFIG[]    = ">> setting up <<";
 
 const char STR_SUNDAY[]    = "Domingone";
 const char STR_MONDAY[]    = "Segundona";
